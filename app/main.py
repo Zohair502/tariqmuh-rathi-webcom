@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from app.db import get_conn, create_schema, insert_example_data
 
 app = FastAPI()
 
@@ -14,6 +15,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+create_schema()
+insert_example_data()
+
 rooms = [
     {"room_number": 101, "room_type": "single room", "price": 80},
     {"room_number": 202, "room_type": "double room", "price": 120},
@@ -21,8 +25,12 @@ rooms = [
 ]
 
 @app.get("/")
-def read_root():
-    return {"msg": "Hello docker dev mode"}
+def read_root(): 
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute("SELECT version() ")
+        result = cur.fetchone()
+
+    return { "msg": f"Hotel API!", "db_status": result }
 
 @app.get("/api/ip")
 def api_ip(request: Request):
