@@ -1,10 +1,10 @@
-from fastapi import FastAPI, Request as REQUEST
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-origins = [ "*" ]  # Allow all origins for development; restrict in production
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -14,26 +14,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+rooms = [
+    {"room_number": 101, "room_type": "single room", "price": 80},
+    {"room_number": 202, "room_type": "double room", "price": 120},
+    {"room_number": 404, "room_type": "suite", "price": 500}
+]
 
 @app.get("/")
 def read_root():
-    return { "msg": "Hello docker dev mode"}
+    return {"msg": "Hello docker dev mode"}
 
-
-# what is my ip address?
 @app.get("/api/ip")
-def api_ip(request : REQUEST):
-    return { "ip": request.client.host }
+def api_ip(request: Request):
+    return {"ip": request.client.host}
 
 @app.get("/ip", response_class=HTMLResponse)
-def ip(request : REQUEST):
+def ip(request: Request):
     return f"""
     <html>
-        <head>
-            <title>My IP Address</title>
-        </head>
+        <head><title>My IP Address</title></head>
         <body>
             <h1>Your IP Address is: {request.client.host}</h1>
         </body>
     </html>
     """
+
+@app.get("/rooms")
+def get_rooms():
+    return rooms
+
+@app.post("/bookings")
+async def create_booking(request: Request):
+    body = await request.json()
+    return {
+        "msg": "Booking created!",
+        "booking": body
+    }
